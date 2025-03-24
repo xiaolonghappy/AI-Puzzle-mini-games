@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>贪吃蛇游戏</title>
+    <style>
+        body {
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(135deg, #E8F5E9 0%, #81C784 50%, #4CAF50 100%);
+            font-family: Arial, sans-serif;
+            transition: background 0.5s;
+        }
+        body.hell-mode {
+            background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 50%, #1A0000 100%);
+            animation: fireEffect 3s infinite;
+        }
+        @keyframes fireEffect {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        #gameContainer {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .hell-mode #gameContainer {
+            background: rgba(183, 28, 28, 0.2);
+            box-shadow: 0 8px 32px rgba(255, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        #gameCanvas {
+            border: none;
+            border-radius: 15px;
+            background-color: rgba(232, 245, 233, 0.95);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><defs><linearGradient id="wood" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23D2691E"/><stop offset="50%" style="stop-color:%238B4513"/><stop offset="100%" style="stop-color:%23A0522D"/></linearGradient><linearGradient id="metal" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23C0C0C0"/><stop offset="50%" style="stop-color:%23A9A9A9"/><stop offset="100%" style="stop-color:%23808080"/></linearGradient></defs><g transform="rotate(45,24,24)"><rect x="18" y="6" width="12" height="30" rx="3" fill="url(%23wood)"/><rect x="16.5" y="6" width="15" height="6" rx="1.5" fill="url(%23metal)"/></g></svg>') 12 36, auto;
+        }
+        #scoreBoard {
+            font-size: 24px;
+            color: #333;
+            margin: 10px 0;
+        }
+        .game-button {
+            font-size: 20px;
+            padding: 10px 20px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        #startButton {
+            background-color: #4CAF50;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        #startButton:hover {
+            background-color: #388E3C;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .difficulty-button {
+            background-color: #2196F3;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .difficulty-button:hover {
+            background-color: #1976D2;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .difficulty-button.active {
+            background-color: #1565C0;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+        
+        /* 奖励面板样式 */
+        #rewardPanel {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 215, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            width: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+            border: 2px solid rgba(255, 215, 0, 0.5);
+        }
+        
+        .hell-mode #rewardPanel {
+            background: rgba(255, 165, 0, 0.3);
+            border: 2px solid rgba(255, 165, 0, 0.6);
+            box-shadow: 0 4px 16px rgba(255, 0, 0, 0.4);
+        }
+        
+        .reward-info {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(255, 215, 0, 0.5);
+        }
+        
+        .hell-mode .reward-info {
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(255, 0, 0, 0.7);
+        }
+        
+        .reward-timer-container {
+            width: 30px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid rgba(255, 215, 0, 0.5);
+        }
+        
+        .hell-mode .reward-timer-container {
+            background: rgba(30, 0, 0, 0.3);
+            border: 2px solid rgba(255, 165, 0, 0.6);
+        }
+        
+        .reward-timer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(to top, #FFD700, #DAA520);
+            height: 100%;
+            transition: height 0.1s linear;
+        }
+        
+        .hell-mode .reward-timer {
+            background: linear-gradient(to top, #FF4500, #FF8C00);
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer" style="position: relative;">
+        <div id="scoreBoard">分数: <span id="score">0</span></div>
+        <canvas id="gameCanvas" width="600" height="400"></canvas>
+        <div>
+            <button id="startButton" class="game-button">开始游戏</button>
+            <button class="game-button difficulty-button" data-difficulty="easy">简单</button>
+            <button class="game-button difficulty-button active" data-difficulty="normal">普通</button>
+            <button class="game-button difficulty-button" data-difficulty="hard">困难</button>
+            <button class="game-button difficulty-button" data-difficulty="hell">地狱</button>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
