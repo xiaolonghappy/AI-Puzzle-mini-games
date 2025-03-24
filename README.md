@@ -1,1 +1,3 @@
-AI-Puzzle-mini-games
+# AI-Puzzle-mini-games
+
+这是一个完全使用AI编写的一个网页项目,里面将复刻童年经典的益智小游戏或者解压小游戏
